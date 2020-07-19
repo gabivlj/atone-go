@@ -21,9 +21,8 @@ type Element interface{}
 
 // Vec is the implementation of an atone vector just like in https://github.com/jonhoo/atone, there you will find what is so special about this implementation
 type Vec struct {
-	oldHead     []Element
-	newHead     []Element
-	supportHead []Element
+	oldHead []Element
+	newHead []Element
 }
 
 // NItemsToMoveOnEachInsert is the number of items we move on each insert, recommended values: 1, 4, 6....
