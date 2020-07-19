@@ -252,6 +252,27 @@ func BenchmarkInsert(b *testing.B) {
 	}
 }
 
+func TestReverse(t *testing.T) {
+	nItems := 26
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	arr.Reverse()
+	for i := 0; i < nItems; i++ {
+		assert(arr.Get(i) == nItems-1-i)
+	}
+}
+
+func TestReserve(t *testing.T) {
+	nItems := 17
+	arr := atone.NewWithCapacity(20)
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	// assert(arr.Capacity() >= 25)
+}
+
 func assert(cond bool) {
 	if !cond {
 		panic("condition not met")

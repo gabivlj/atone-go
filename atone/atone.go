@@ -5,6 +5,8 @@
 /// Implementation by @gabivlj. Free to use and contribute by anyone.
 ///
 /// This is currently under development and it's not yet very optimized
+///
+/// atone.go has GC overhead.
 
 package atone
 
@@ -26,7 +28,7 @@ type Vec struct {
 }
 
 // NItemsToMoveOnEachInsert is the number of items we move on each insert, recommended values: 1, 4, 6....
-const NItemsToMoveOnEachInsert = 8
+const NItemsToMoveOnEachInsert = 2
 
 // New returns a new atone Vec
 func New() Vec {
@@ -190,19 +192,48 @@ func (v *Vec) Swap(i int, j int) {
 			v.oldHead[i], v.oldHead[j] = v.oldHead[j], v.oldHead[i]
 			return
 		}
-		v.newTail[i], v.newTail[j] = v.newTail[j], v.newTail[i]
+		l := v.oldLen()
+		v.newTail[i-l], v.newTail[j-l] = v.newTail[j-l], v.newTail[i-l]
 		return
 	}
 
 	if !iIsInOldHead {
-		v.oldHead[i], v.newTail[j] = v.newTail[j], v.oldHead[i]
+		l := v.oldLen()
+		v.oldHead[i], v.newTail[j-l] = v.newTail[j-l], v.oldHead[i]
 		return
 	}
 
 	v.oldHead[j], v.newTail[i] = v.newTail[i], v.oldHead[j]
 }
 
-// func Reverse todo
+func reverseSlice(s []Element) {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+}
+
+// Reverse inplace the array and empties the old head
+func (v *Vec) Reverse() {
+	reverseSlice(v.newTail)
+	if v.oldHead != nil {
+		for i := range v.oldHead {
+			v.newTail = append(v.newTail, v.oldHead[v.oldLen()-i-1])
+		}
+		v.oldHead = nil
+	}
+}
+
+// Reserve the desired size inmemory to let space for nElements, it might reserve more memory than necessary for leaving space for more items for carry()
+func (v *Vec) Reserve(nElements int) {
+
+	if v.oldLen() > 0 {
+
+		v.carryAll()
+		v.grow(nElements)
+		return
+	}
+	v.grow(nElements)
+}
 
 // Capacity is the equivalent of cap(elements)
 func (v *Vec) Capacity() int {
@@ -396,6 +427,15 @@ func (v *Vec) carry() {
 
 }
 
+func (v *Vec) carryAll() {
+	if v.oldLen() == 0 {
+		v.oldHead = nil
+		return
+	}
+	v.newTail = append(v.oldHead[0:], v.newTail...)
+	v.oldHead = nil
+}
+
 const pushMultiplierOldVector = 2
 
 func (v *Vec) grow(growFactor int) {
@@ -417,12 +457,10 @@ func (v *Vec) grow(growFactor int) {
 	//    Which is == ((R+1)*len)/R
 	//    Which is == len * (R+1)/R
 	//  - We don't actually use that formula because of integer division.
-	//
 	// We also need to make sure we can fit the additional capacity required for `extra`.
 	// Normally, that'll be handled by `pushes`, but not always!
 	add := max(pushes, growFactor)
-	elements := make([]Element, 0, add+pushes+need)
-
+	elements := make([]Element, 0, cap(v.newTail)+add+pushes+need)
 	v.oldHead = make([]Element, 0, add+pushes+need*pushMultiplierOldVector)
 	v.oldHead = append(v.oldHead, v.newTail...)
 	v.newTail = elements
