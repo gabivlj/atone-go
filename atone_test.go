@@ -165,6 +165,16 @@ func TestContains(b *testing.T) {
 	}
 }
 
+func TestModifyViaGet(b *testing.T) {
+	nItems := 10
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	*arr.GetRef(0) = 2 + 3
+	assert(arr.Get(0) == 5)
+}
+
 func assert(cond bool) {
 	if !cond {
 		panic("condition not met")

@@ -74,6 +74,16 @@ func (v *Vec) Get(index int) Element {
 	return v.newTail[offset]
 }
 
+// GetRef returns FOR SURE a pointer to the element even though it is a stack element like int
+func (v *Vec) GetRef(index int) *Element {
+	if index < v.oldLen() {
+		return &v.oldHead[index]
+	}
+
+	offset := index - v.oldLen()
+	return &v.newTail[offset]
+}
+
 // Swap swaps elements in the structure
 func (v *Vec) Swap(i int, j int) {
 	iIsInOldHead := i < v.oldLen()
