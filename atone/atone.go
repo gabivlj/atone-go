@@ -241,8 +241,8 @@ func (v *Vec) Iter() []Element {
 	return elements
 }
 
-// IterFunc iterates through the array doing a callback to the passed function
-func (v *Vec) IterFunc(fn func(el Element, index int)) {
+// ForEach iterates through the array doing a callback to the passed function
+func (v *Vec) ForEach(fn func(el Element, index int)) {
 	if v.oldLen() > 0 {
 		for i := range v.oldHead {
 			fn(v.oldHead[i], i)

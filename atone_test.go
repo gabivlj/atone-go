@@ -145,7 +145,7 @@ func TestIter(b *testing.T) {
 	for i, el := range arr.Iter() {
 		assert(el == i)
 	}
-	arr.IterFunc(func(el atone.Element, idx int) { assert(el == idx) })
+	arr.ForEach(func(el atone.Element, idx int) { assert(el == idx) })
 	arr.Clear()
 	_, ok := arr.Lookup(0)
 	assert(!ok)
