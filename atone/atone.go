@@ -22,7 +22,7 @@ type Element interface{}
 // Vec is the implementation of an atone vector just like in https://github.com/jonhoo/atone, there you will find what is so special about this implementation
 type Vec struct {
 	oldHead []Element
-	newHead []Element
+	newTail []Element
 }
 
 // NItemsToMoveOnEachInsert is the number of items we move on each insert, recommended values: 1, 4, 6....
@@ -31,7 +31,7 @@ const NItemsToMoveOnEachInsert = 6
 // New returns a new atone Vec
 func New() Vec {
 	return Vec{
-		newHead: make([]Element, 0, 0),
+		newTail: make([]Element, 0, 0),
 		oldHead: nil,
 	}
 }
@@ -39,7 +39,7 @@ func New() Vec {
 // NewWithCapacity is the equivalent of doing make([]Element, 0, capacity)
 func NewWithCapacity(capacity uint64) Vec {
 	return Vec{
-		newHead: make([]Element, 0, capacity),
+		newTail: make([]Element, 0, capacity),
 		oldHead: nil,
 	}
 }
@@ -58,10 +58,10 @@ func (v *Vec) Get(index int) (Element, bool) {
 		return v.oldHead[index], true
 	}
 	offset := index - v.oldLen()
-	if offset >= len(v.newHead) || offset < 0 {
+	if offset >= len(v.newTail) || offset < 0 {
 		return nil, false
 	}
-	return v.newHead[offset], true
+	return v.newTail[offset], true
 }
 
 // Swap swaps elements in the structure
@@ -74,29 +74,29 @@ func (v *Vec) Swap(i int, j int) {
 			v.oldHead[i], v.oldHead[j] = v.oldHead[j], v.oldHead[i]
 			return
 		}
-		v.newHead[i], v.newHead[j] = v.newHead[j], v.newHead[i]
+		v.newTail[i], v.newTail[j] = v.newTail[j], v.newTail[i]
 		return
 	}
 
 	if !iIsInOldHead {
-		v.oldHead[i], v.newHead[j] = v.newHead[j], v.oldHead[i]
+		v.oldHead[i], v.newTail[j] = v.newTail[j], v.oldHead[i]
 		return
 	}
 
-	v.oldHead[j], v.newHead[i] = v.newHead[i], v.oldHead[j]
+	v.oldHead[j], v.newTail[i] = v.newTail[i], v.oldHead[j]
 }
 
 // func Reverse todo
 
 // Capacity is the equivalent of cap(elements)
 func (v *Vec) Capacity() int {
-	return cap(v.newHead)
+	return cap(v.newTail)
 }
 
 // Shrink ; the capacity will remain to atleast the length of the array (TODO)
 func (v *Vec) Shrink(minCapacity int) {
 	// Calculate the min. number of elements we need to reserve
-	need := len(v.newHead)
+	need := len(v.newTail)
 	if v.oldHead != nil {
 		oldLen := v.oldLen()
 		need += oldLen
@@ -112,7 +112,7 @@ func (v *Vec) Truncate(n int) {}
 
 // Len returns the number of elements stored in the array
 func (v *Vec) Len() int {
-	return v.oldLen() + len(v.newHead)
+	return v.oldLen() + len(v.newTail)
 }
 
 // IsEmpty returns if there is any element in the array or not
@@ -123,14 +123,14 @@ func (v *Vec) IsEmpty() bool {
 // Clear empties the array
 func (v *Vec) Clear() {
 	v.oldHead = nil
-	v.newHead = v.newHead[:0]
+	v.newTail = v.newTail[:0]
 }
 
 // Contains returns true if the element is inside the array
 func (v *Vec) Contains(el Element) bool {
-	bigger := v.newHead
+	bigger := v.newTail
 	smaller := v.oldHead
-	if len(v.newHead) < v.oldLen() {
+	if len(v.newTail) < v.oldLen() {
 		bigger, smaller = smaller, bigger
 	}
 	for i := range bigger {
@@ -146,9 +146,9 @@ func (v *Vec) Contains(el Element) bool {
 
 // ContainsCmp returns true if the element is inside the array, will use the cmp func
 func (v *Vec) ContainsCmp(el Element, cmp func(arrayElement Element, el Element) bool) bool {
-	bigger := v.newHead
+	bigger := v.newTail
 	smaller := v.oldHead
-	if len(v.newHead) < v.oldLen() {
+	if len(v.newTail) < v.oldLen() {
 		bigger, smaller = smaller, bigger
 	}
 	for i := range bigger {
@@ -167,16 +167,16 @@ func (v *Vec) First() Element {
 	if v.oldLen() > 0 {
 		return v.oldHead[0]
 	}
-	if len(v.newHead) > 0 {
-		return v.newHead[0]
+	if len(v.newTail) > 0 {
+		return v.newTail[0]
 	}
 	return nil
 }
 
 // Last returns the last element of the array, returns null if it is empty
 func (v *Vec) Last() Element {
-	if len(v.newHead) > 0 {
-		return v.newHead[len(v.newHead)-1]
+	if len(v.newTail) > 0 {
+		return v.newTail[len(v.newTail)-1]
 	}
 	oldLen := v.oldLen()
 	if oldLen > 0 {
@@ -192,9 +192,9 @@ func (v *Vec) PopFront() Element {
 		v.oldHead = v.oldHead[1:]
 		return popped
 	}
-	if len(v.newHead) > 0 {
-		popped := v.newHead[0]
-		v.newHead = v.newHead[1:]
+	if len(v.newTail) > 0 {
+		popped := v.newTail[0]
+		v.newTail = v.newTail[1:]
 		return popped
 	}
 	return nil
@@ -202,9 +202,9 @@ func (v *Vec) PopFront() Element {
 
 // PopBack pops the last element of the array, returns null if the array is empty
 func (v *Vec) PopBack() Element {
-	if len(v.newHead) > 0 {
-		popped := v.newHead[len(v.newHead)-1]
-		v.newHead = v.newHead[:len(v.newHead)-1]
+	if len(v.newTail) > 0 {
+		popped := v.newTail[len(v.newTail)-1]
+		v.newTail = v.newTail[:len(v.newTail)-1]
 		return popped
 	}
 	oldL := v.oldLen()
@@ -227,7 +227,7 @@ func (v *Vec) Iter() []Element {
 	if v.oldHead != nil {
 		elements = append(elements, v.oldHead...)
 	}
-	elements = append(elements, v.newHead...)
+	elements = append(elements, v.newTail...)
 	return elements
 }
 
@@ -238,20 +238,20 @@ func (v *Vec) IterFunc(fn func(el Element, index int)) {
 			fn(v.oldHead[i], i)
 		}
 	}
-	for i := range v.newHead {
-		fn(v.newHead[i], i)
+	for i := range v.newTail {
+		fn(v.newTail[i], i)
 	}
 }
 
 // Push pushes back an element into the array
 func (v *Vec) Push(el Element) {
-	if cap(v.newHead) == len(v.newHead) {
+	if cap(v.newTail) == len(v.newTail) {
 		v.grow(1)
 		v.Push(el)
 		return
 	}
 
-	v.newHead = append(v.newHead, el)
+	v.newTail = append(v.newTail, el)
 	if v.oldLen() != 0 {
 		v.carry()
 	}
@@ -271,7 +271,7 @@ func (v *Vec) carry() {
 	}
 	lenOld := v.oldLen()
 	calc := max(lenOld-NItemsToMoveOnEachInsert, 0)
-	v.newHead = append(v.oldHead[calc:], v.newHead...)
+	v.newTail = append(v.oldHead[calc:], v.newTail...)
 	v.oldHead = v.oldHead[:calc]
 	if v.oldLen() == 0 {
 		v.oldHead = nil
@@ -291,7 +291,7 @@ func (v *Vec) grow(growFactor int) {
 	//
 	// Here's how we get to len * (R + 1)/R:
 	//  - We need to move another len items
-	need := len(v.newHead)
+	need := len(v.newTail)
 	//  - We move R items on each push, so to move len items takes
 	//    len / R pushes (rounded up!)
 	//  - Since we want to round up, we pull the old +R-1 trick
@@ -308,8 +308,8 @@ func (v *Vec) grow(growFactor int) {
 	elements := make([]Element, 0, add+pushes+need)
 
 	v.oldHead = make([]Element, 0, add+pushes+need*pushMultiplierOldVector)
-	v.oldHead = append(v.oldHead, v.newHead...)
-	v.newHead = elements
+	v.oldHead = append(v.oldHead, v.newTail...)
+	v.newTail = elements
 }
 
 func max(n, n2 int) int {
@@ -328,5 +328,5 @@ func assertDebug(cond bool) {
 
 // Debug the vec
 func (v *Vec) Debug() string {
-	return fmt.Sprintf("Old: %v \n", v.oldHead) + fmt.Sprintf("New: %v", v.newHead)
+	return fmt.Sprintf("Old: %v \n", v.oldHead) + fmt.Sprintf("New: %v", v.newTail)
 }
