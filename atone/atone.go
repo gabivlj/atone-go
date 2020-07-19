@@ -57,11 +57,11 @@ func (v *Vec) Get(index int) (Element, bool) {
 	if index < v.oldLen() {
 		return v.oldHead[index], true
 	}
-	ok := index < len(v.newHead)
-	if ok {
-		return v.newHead[index], ok
+	offset := index - v.oldLen()
+	if offset >= len(v.newHead) || offset < 0 {
+		return nil, false
 	}
-	return nil, ok
+	return v.newHead[offset], true
 }
 
 // Swap swaps elements in the structure

@@ -44,6 +44,28 @@ func BenchmarkAtone(b *testing.B) {
 	// log.Println(arr.Debug())
 }
 
+func BenchmarkThingsAtone(b *testing.B) {
+	arrMedium := int64(0)
+	l := 100
+	arr := atone.NewWithCapacity(3)
+	for i := 0; i < l; i++ {
+		e := time.Now()
+		arr.Push(i)
+		arr.PopBack()
+		arr.Push(i)
+		n, _ := arr.Get(i)
+		number, ok := n.(int)
+		if !ok {
+			b.Fatalf("error with number %d %s", i, arr.Debug())
+			return
+		}
+		assert(number == i)
+		arrMedium += time.Now().UnixNano() - e.UnixNano()
+	}
+	log.Println("Average cost in each operation: ", arrMedium/int64(l))
+	// log.Println(arr.Debug())
+}
+
 // 2020/07/19 02:39:36 Average insertion:  247
 // goos: darwin
 // goarch: amd64
@@ -83,4 +105,10 @@ func BenchmarkStandard(b *testing.B) {
 	}
 	log.Println("Average insertion: ", arrMedium/int64(l))
 	// log.Println(arr2)
+}
+
+func assert(cond bool) {
+	if !cond {
+		panic("condition not met")
+	}
 }
