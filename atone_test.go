@@ -286,7 +286,7 @@ func TestTruncate(t *testing.T) {
 	}
 }
 
-func BenchmarkSlice(b *testing.B) {
+func TestSlice(t *testing.T) {
 	nItems := 17
 	arr := atone.NewWithCapacity(0)
 	for i := 0; i < nItems; i++ {

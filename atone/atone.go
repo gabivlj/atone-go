@@ -27,7 +27,7 @@ type Vec struct {
 	newTail []Element
 }
 
-// NItemsToMoveOnEachInsert is the number of items we move on each insert, recommended values: 1, 4, 6....
+// NItemsToMoveOnEachInsert is the number of items we move on each insert, between 4-8 the performance doesn't have much difference
 const NItemsToMoveOnEachInsert = 5
 
 // New returns a new atone Vec
