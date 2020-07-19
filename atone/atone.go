@@ -26,7 +26,7 @@ type Vec struct {
 }
 
 // NItemsToMoveOnEachInsert is the number of items we move on each insert, recommended values: 1, 4, 6....
-const NItemsToMoveOnEachInsert = 6
+const NItemsToMoveOnEachInsert = 8
 
 // New returns a new atone Vec
 func New() Vec {
@@ -145,6 +145,39 @@ func (v *Vec) FindMultithreaded(el Element) int {
 		}
 	}
 	return -1
+}
+
+// Insert .
+func (v *Vec) Insert(el Element) {
+
+	if len(v.newTail) == cap(v.newTail) {
+		v.grow(1)
+		v.Insert(el)
+		return
+	}
+	if v.oldLen() == 0 {
+		els := make([]Element, 0, cap(v.newTail)+1)
+		els = append(els, el)
+		v.newTail = append(els, v.newTail...)
+		return
+	}
+	// storage for sufficient elements in the new tail. maybe with a better implementaiton we could jump this
+	els := make([]Element, 0, cap(v.newTail)+1)
+	// insert the popped element
+	els[0] = v.oldHead[len(v.oldHead)-1]
+	// copy rest
+	v.newTail = append(els, v.newTail...)
+	// length
+	oldLen := len(v.oldHead)
+	// append the element to the old head
+	v.oldHead = append(v.oldHead, el)
+	// append rest
+	v.oldHead = append(v.oldHead, v.oldHead...)
+	// jump
+	v.oldHead = v.oldHead[oldLen:]
+	if v.oldLen() != 0 {
+		v.carry()
+	}
 }
 
 // Swap swaps elements in the structure

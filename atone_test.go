@@ -8,6 +8,28 @@ import (
 	"github.com/gabivlj/atone-go/atone"
 )
 
+func BenchmarkThingsAtone(b *testing.B) {
+	arrMedium := int64(0)
+	l := 100
+	arr := atone.NewWithCapacity(3)
+	for i := 0; i < l; i++ {
+		e := time.Now()
+		arr.Push(i)
+		arr.PopBack()
+		arr.Push(i)
+		n, _ := arr.Lookup(i)
+		number, ok := n.(int)
+		if !ok {
+			b.Fatalf("error with number %d %s", i, arr.Debug())
+			return
+		}
+		assert(number == i)
+		arrMedium += time.Now().UnixNano() - e.UnixNano()
+	}
+	log.Println("Average cost in each operation: ", arrMedium/int64(l))
+	// log.Println(arr.Debug())
+}
+
 // 2020/07/19 02:39:09 Average insertion:  136
 // goos: darwin
 // goarch: amd64
@@ -32,37 +54,24 @@ import (
 // ok      github.com/gabivlj/atone-go     2.455s
 func BenchmarkAtone(b *testing.B) {
 	arrMedium := int64(0)
-	l := 1000000
-	arr := atone.NewWithCapacity(3)
+	l := 10000000
+	m := int64(0)
+	arr := atone.New()
+	stats := make([]int64, 0, l)
 	for i := 0; i < l; i++ {
 		e := time.Now()
 		arr.Push(i)
 		// arr.PopBack()
-		arrMedium += time.Now().UnixNano() - e.UnixNano()
+		t := time.Now().UnixNano() - e.UnixNano()
+		arrMedium += t
+		m = max(t, m)
+		if t > 300 {
+			stats = append(stats, t)
+		}
 	}
 	log.Println("Average insertion: ", arrMedium/int64(l))
-	// log.Println(arr.Debug())
-}
-
-func BenchmarkThingsAtone(b *testing.B) {
-	arrMedium := int64(0)
-	l := 100
-	arr := atone.NewWithCapacity(3)
-	for i := 0; i < l; i++ {
-		e := time.Now()
-		arr.Push(i)
-		arr.PopBack()
-		arr.Push(i)
-		n, _ := arr.Lookup(i)
-		number, ok := n.(int)
-		if !ok {
-			b.Fatalf("error with number %d %s", i, arr.Debug())
-			return
-		}
-		assert(number == i)
-		arrMedium += time.Now().UnixNano() - e.UnixNano()
-	}
-	log.Println("Average cost in each operation: ", arrMedium/int64(l))
+	log.Println("Max insertion: ", int64(m))
+	log.Println("Stats (Number of times an insert took a lot of time): ", len(stats))
 	// log.Println(arr.Debug())
 }
 
@@ -93,19 +102,28 @@ func BenchmarkThingsAtone(b *testing.B) {
 // ok      github.com/gabivlj/atone-go     4.534s
 func BenchmarkStandard(b *testing.B) {
 	arrMedium := int64(0)
-	l := 1000000
-	arr2 := make([]atone.Element, 0, 3)
+	l := 10000000
+	m := int64(0)
+	arr2 := make([]atone.Element, 0)
+	stats := make([]int64, 0, l)
 	for i := 0; i < l; i++ {
 		e := time.Now()
 		arr2 = append(arr2, i)
-		arr2 = append(arr2, i)
-		arr2 = append(arr2, i)
-		arr2 = arr2[:len(arr2)-1]
-		arrMedium += time.Now().UnixNano() - e.UnixNano()
+		t := time.Now().UnixNano() - e.UnixNano()
+		arrMedium += t
+		m = max(t, m)
+		if t > 200 {
+			stats = append(stats, t)
+		}
 	}
 	log.Println("Average insertion: ", arrMedium/int64(l))
+	log.Println("Max insertion: ", int64(m))
+	log.Println("Stats (Number of times an insert took a lot of time): ", len(stats))
 	// log.Println(arr2)
 }
+
+// 196793000
+// 88722000
 
 func TestPopFront(t *testing.T) {
 	arr := atone.New()
@@ -202,8 +220,47 @@ func BenchmarkFind02(b *testing.B) {
 	assert(arr.Find02(355523) == 355523)
 }
 
+func BenchmarkInsertAtone(b *testing.B) {
+	arrMedium := int64(0)
+	nItems := 10000
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		e := time.Now()
+		arr.Insert(i)
+		assert(arr.Get(0) == i)
+		arrMedium += time.Now().UnixNano() - e.UnixNano()
+	}
+	log.Println("Average insertion: ", arrMedium/int64(nItems))
+	for i := 0; i < nItems; i++ {
+		assert(arr.Get(i) == nItems-1-i)
+	}
+}
+
+func BenchmarkInsert(b *testing.B) {
+	arrMedium := int64(0)
+	nItems := 10000
+	arr := make([]atone.Element, 0)
+	for i := 0; i < nItems; i++ {
+		e := time.Now()
+		arr = append([]atone.Element{i}, arr...)
+		assert(arr[0] == i)
+		arrMedium += time.Now().UnixNano() - e.UnixNano()
+	}
+	log.Println("Average insertion: ", arrMedium/int64(nItems))
+	for i := 0; i < nItems; i++ {
+		assert(arr[i] == nItems-1-i)
+	}
+}
+
 func assert(cond bool) {
 	if !cond {
 		panic("condition not met")
 	}
+}
+
+func max(n, n2 int64) int64 {
+	if n > n2 {
+		return n
+	}
+	return n2
 }
