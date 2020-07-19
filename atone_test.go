@@ -53,7 +53,7 @@ func BenchmarkThingsAtone(b *testing.B) {
 		arr.Push(i)
 		arr.PopBack()
 		arr.Push(i)
-		n, _ := arr.Get(i)
+		n, _ := arr.Lookup(i)
 		number, ok := n.(int)
 		if !ok {
 			b.Fatalf("error with number %d %s", i, arr.Debug())
@@ -105,6 +105,64 @@ func BenchmarkStandard(b *testing.B) {
 	}
 	log.Println("Average insertion: ", arrMedium/int64(l))
 	// log.Println(arr2)
+}
+
+func TestPopFront(t *testing.T) {
+	arr := atone.New()
+	arr.Push(1)
+	arr.Push(2)
+	arr.Push(3)
+	assert(arr.PopFront() == 1)
+	assert(arr.Len() == 2)
+	assert(arr.PopFront() == 2)
+	assert(arr.Len() == 1)
+	assert(arr.PopFront() == 3)
+	assert(arr.Len() == 0)
+}
+
+func TestSwap(t *testing.T) {
+	arr := atone.New()
+	arr.Push(1)
+	arr.Push(2)
+	arr.Push(3)
+	arr.Push(4)
+	arr.Push(5)
+	arr.Swap(0, 1)
+	arr.Swap(2, 3)
+	assert(arr.Get(0) == 2)
+	assert(arr.Get(2) == 4)
+}
+
+func TestIter(b *testing.T) {
+	nItems := 10
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	for i := 0; i < arr.Len(); i++ {
+		assert(arr.Get(i) == i)
+	}
+	for i, el := range arr.Iter() {
+		assert(el == i)
+	}
+	arr.IterFunc(func(el atone.Element, idx int) { assert(el == idx) })
+	arr.Clear()
+	_, ok := arr.Lookup(0)
+	assert(!ok)
+}
+
+func TestContains(b *testing.T) {
+	nItems := 10
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	for i := 0; i < arr.Len(); i++ {
+		assert(arr.Contains(i))
+	}
+	for i := 0; i < arr.Len(); i++ {
+		assert(arr.ContainsCmp(i, func(el atone.Element, other atone.Element) bool { return el == other }))
+	}
 }
 
 func assert(cond bool) {

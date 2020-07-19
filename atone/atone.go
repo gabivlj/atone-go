@@ -52,8 +52,8 @@ func (v *Vec) oldLen() int {
 	return len(v.oldHead)
 }
 
-// Get returns an element, the boolean is false if the element does not exist.
-func (v *Vec) Get(index int) (Element, bool) {
+// Lookup returns an element, the boolean is false if the element does not exist.
+func (v *Vec) Lookup(index int) (Element, bool) {
 	if index < v.oldLen() {
 		return v.oldHead[index], true
 	}
@@ -62,6 +62,16 @@ func (v *Vec) Get(index int) (Element, bool) {
 		return nil, false
 	}
 	return v.newTail[offset], true
+}
+
+// Get returns the element in the specified index, can panic if it is outofbounds, if you don't want to panic on get, use Lookup
+func (v *Vec) Get(index int) Element {
+	if index < v.oldLen() {
+		return v.oldHead[index]
+	}
+
+	offset := index - v.oldLen()
+	return v.newTail[offset]
 }
 
 // Swap swaps elements in the structure
