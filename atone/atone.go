@@ -28,19 +28,27 @@ type Vec struct {
 }
 
 // NItemsToMoveOnEachInsert is the number of items we move on each insert, recommended values: 1, 4, 6....
-const NItemsToMoveOnEachInsert = 2
+const NItemsToMoveOnEachInsert = 5
 
 // New returns a new atone Vec
-func New() Vec {
-	return Vec{
+func New() *Vec {
+	return &Vec{
 		newTail: make([]Element, 0, 0),
 		oldHead: nil,
 	}
 }
 
+// From returns a new Vec from a Slice
+func From(elements []Element) *Vec {
+	return &Vec{
+		newTail: elements,
+		oldHead: nil,
+	}
+}
+
 // NewWithCapacity is the equivalent of doing make([]Element, 0, capacity)
-func NewWithCapacity(capacity uint64) Vec {
-	return Vec{
+func NewWithCapacity(capacity uint64) *Vec {
+	return &Vec{
 		newTail: make([]Element, 0, capacity),
 		oldHead: nil,
 	}
@@ -255,7 +263,19 @@ func (v *Vec) Shrink(minCapacity int) {
 }
 
 // Truncate only will mantain only the first 'n' elements in the array and the rest will be free'd
-func (v *Vec) Truncate(n int) {}
+func (v *Vec) Truncate(n int) {
+	if n <= v.oldLen() {
+		v.newTail = append(v.newTail[:0], v.oldHead[:n]...)
+		if n == v.oldLen() {
+			v.oldHead = nil
+		} else {
+			v.oldHead = v.oldHead[n:]
+		}
+		return
+	}
+	maintain := n - v.oldLen()
+	v.newTail = append(v.oldHead, v.newTail[:maintain]...)
+}
 
 // Len returns the number of elements stored in the array
 func (v *Vec) Len() int {
@@ -378,6 +398,34 @@ func (v *Vec) Iter() []Element {
 	return elements
 }
 
+// Slice generates a slice slicing the array from start to end (end is not inclusive and start is)
+func (v *Vec) Slice(start, end int) []Element {
+	elements := make([]Element, 0, end-start)
+	if v.oldLen() > start {
+		newEnd := end
+		if newEnd > v.oldLen() {
+			newEnd = v.oldLen()
+		}
+		elements = append(elements, v.oldHead[start:newEnd]...)
+		if newEnd > v.oldLen() {
+			elements = append(elements, v.newTail[:newEnd-v.oldLen()])
+		}
+		return elements
+	}
+	elements = append(elements, v.newTail[start:end]...)
+	return elements
+}
+
+// Array creates a slice of this array
+func (v *Vec) Array() []Element {
+	return v.Slice(0, v.Len())
+}
+
+// SliceThis returns a new Vec with the specified slice (end non inclusive and start is inclusive)
+func (v *Vec) SliceThis(start, end int) *Vec {
+	return From(v.Slice(start, end))
+}
+
 // ForEach iterates through the array doing a callback to the passed function
 func (v *Vec) ForEach(fn func(el Element, index int)) {
 	if v.oldLen() > 0 {
@@ -463,6 +511,7 @@ func (v *Vec) grow(growFactor int) {
 	elements := make([]Element, 0, cap(v.newTail)+add+pushes+need)
 	v.oldHead = make([]Element, 0, add+pushes+need*pushMultiplierOldVector)
 	v.oldHead = append(v.oldHead, v.newTail...)
+
 	v.newTail = elements
 }
 

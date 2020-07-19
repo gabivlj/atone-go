@@ -273,6 +273,38 @@ func TestReserve(t *testing.T) {
 	// assert(arr.Capacity() >= 25)
 }
 
+func TestTruncate(t *testing.T) {
+	nItems := 17
+	arr := atone.NewWithCapacity(0)
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+
+	for i := 0; i < nItems; i++ {
+		arr.Truncate(nItems - i)
+		assert(arr.Len() == nItems-i)
+	}
+}
+
+func BenchmarkSlice(b *testing.B) {
+	nItems := 17
+	arr := atone.NewWithCapacity(0)
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	for i := 0; i < 14; i++ {
+		elements := arr.Slice(i, 13)
+		assert(len(elements) == 14-i-1)
+		for j := range elements {
+			assert(j+i == elements[j])
+		}
+	}
+	assert(len(arr.Array()) == nItems)
+	for i, el := range atone.From(arr.Array()).Iter() {
+		assert(arr.Get(i) == el)
+	}
+}
+
 func assert(cond bool) {
 	if !cond {
 		panic("condition not met")
