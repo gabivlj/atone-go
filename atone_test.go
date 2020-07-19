@@ -175,6 +175,33 @@ func TestModifyViaGet(b *testing.T) {
 	assert(arr.Get(0) == 5)
 }
 
+func BenchmarkFindMulti(b *testing.B) {
+	nItems := 982771
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	assert(arr.FindMultithreaded(355523) == 355523)
+}
+
+func BenchmarkFind(b *testing.B) {
+	nItems := 982771
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	assert(arr.Find(355523) == 355523)
+}
+
+func BenchmarkFind02(b *testing.B) {
+	nItems := 1000000
+	arr := atone.New()
+	for i := 0; i < nItems; i++ {
+		arr.Push(i)
+	}
+	assert(arr.Find02(355523) == 355523)
+}
+
 func assert(cond bool) {
 	if !cond {
 		panic("condition not met")

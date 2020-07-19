@@ -84,6 +84,69 @@ func (v *Vec) GetRef(index int) *Element {
 	return &v.newTail[offset]
 }
 
+// Find02 tries to find not doing a continuous loop
+func (v *Vec) Find02(el Element) int {
+	bigger := v.newTail
+	smaller := v.oldHead
+	if len(v.newTail) < v.oldLen() {
+		bigger, smaller = smaller, bigger
+	}
+	for i := range bigger {
+		if bigger[i] == el {
+			return i
+		}
+		if i < len(smaller) && smaller[i] == el {
+			return i
+		}
+	}
+	return -1
+}
+
+// Find finds doing a lookup in head and then in tail
+func (v *Vec) Find(el Element) int {
+	if v.oldHead != nil {
+		for i := range v.oldHead {
+			if v.oldHead[i] == el {
+				return i
+			}
+		}
+	}
+
+	for i := range v.newTail {
+		if v.newTail[i] == el {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func find(els []Element, el Element) int {
+	for i := range els {
+		if els[i] == el {
+			return i
+		}
+	}
+	return -1
+}
+
+// FindMultithreaded finds an element with multithreading (with a lot of elements 1000000+)
+func (v *Vec) FindMultithreaded(el Element) int {
+	channel := make(chan int, 2)
+	go func() {
+		channel <- find(v.oldHead, el)
+	}()
+	go func() {
+		channel <- find(v.newTail, el)
+	}()
+	for found := range channel {
+		if found != -1 {
+			return found
+		}
+	}
+	return -1
+}
+
 // Swap swaps elements in the structure
 func (v *Vec) Swap(i int, j int) {
 	iIsInOldHead := i < v.oldLen()
