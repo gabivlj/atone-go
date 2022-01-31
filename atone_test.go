@@ -10,19 +10,15 @@ import (
 
 func BenchmarkThingsAtone(b *testing.B) {
 	arrMedium := int64(0)
-	l := 100
-	arr := atone.NewWithCapacity(3)
+	l := 10000000
+	arr := atone.NewWithCapacity[int](3)
 	for i := 0; i < l; i++ {
 		e := time.Now()
 		arr.Push(i)
 		arr.PopBack()
 		arr.Push(i)
 		n, _ := arr.Lookup(i)
-		number, ok := n.(int)
-		if !ok {
-			b.Fatalf("error with number %d %s", i, arr.Debug())
-			return
-		}
+		number := n
 		assert(number == i)
 		arrMedium += time.Now().UnixNano() - e.UnixNano()
 	}
@@ -56,7 +52,7 @@ func BenchmarkAtone(b *testing.B) {
 	arrMedium := int64(0)
 	l := 10000000
 	m := int64(0)
-	arr := atone.New()
+	arr := atone.New[int]()
 	stats := make([]int64, 0, l)
 	for i := 0; i < l; i++ {
 		e := time.Now()
@@ -104,7 +100,7 @@ func BenchmarkStandard(b *testing.B) {
 	arrMedium := int64(0)
 	l := 10000000
 	m := int64(0)
-	arr2 := make([]atone.Element, 0)
+	arr2 := make([]int, 0)
 	stats := make([]int64, 0, l)
 	for i := 0; i < l; i++ {
 		e := time.Now()
@@ -126,7 +122,7 @@ func BenchmarkStandard(b *testing.B) {
 // 88722000
 
 func TestPopFront(t *testing.T) {
-	arr := atone.New()
+	arr := atone.New[int]()
 	arr.Push(1)
 	arr.Push(2)
 	arr.Push(3)
@@ -139,7 +135,7 @@ func TestPopFront(t *testing.T) {
 }
 
 func TestSwap(t *testing.T) {
-	arr := atone.New()
+	arr := atone.New[int]()
 	arr.Push(1)
 	arr.Push(2)
 	arr.Push(3)
@@ -153,7 +149,7 @@ func TestSwap(t *testing.T) {
 
 func TestIter(b *testing.T) {
 	nItems := 10
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
@@ -163,7 +159,7 @@ func TestIter(b *testing.T) {
 	for i, el := range arr.Iter() {
 		assert(el == i)
 	}
-	arr.ForEach(func(el atone.Element, idx int) { assert(el == idx) })
+	arr.ForEach(func(el int, idx int) { assert(el == idx) })
 	arr.Clear()
 	_, ok := arr.Lookup(0)
 	assert(!ok)
@@ -171,21 +167,21 @@ func TestIter(b *testing.T) {
 
 func TestContains(b *testing.T) {
 	nItems := 10
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
 	for i := 0; i < arr.Len(); i++ {
-		assert(arr.Contains(i))
+		assert(arr.Contains(i, func(el int) bool { return i == el }))
 	}
 	for i := 0; i < arr.Len(); i++ {
-		assert(arr.ContainsCmp(i, func(el atone.Element, other atone.Element) bool { return el == other }))
+		assert(arr.ContainsCmp(i, func(el int, other int) bool { return el == other }))
 	}
 }
 
 func TestModifyViaGet(b *testing.T) {
 	nItems := 10
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
@@ -195,35 +191,35 @@ func TestModifyViaGet(b *testing.T) {
 
 func BenchmarkFindMulti(b *testing.B) {
 	nItems := 982771
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
-	assert(arr.FindMultithreaded(355523) == 355523)
+	assert(arr.FindMultithreaded(355523, func(element int) bool { return element == 355523 }) == 355523)
 }
 
 func BenchmarkFind(b *testing.B) {
 	nItems := 982771
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
-	assert(arr.Find(355523) == 355523)
+	assert(arr.Find(355523, func(element int) bool { return element == 355523 }) == 355523)
 }
 
 func BenchmarkFind02(b *testing.B) {
 	nItems := 1000000
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
-	assert(arr.Find02(355523) == 355523)
+	assert(arr.Find02(355523, func(element int) bool { return element == 355523 }) == 355523)
 }
 
 func BenchmarkInsertAtone(b *testing.B) {
 	arrMedium := int64(0)
 	nItems := 10000
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		e := time.Now()
 		arr.Insert(i)
@@ -239,10 +235,10 @@ func BenchmarkInsertAtone(b *testing.B) {
 func BenchmarkInsert(b *testing.B) {
 	arrMedium := int64(0)
 	nItems := 10000
-	arr := make([]atone.Element, 0)
+	arr := make([]int, 0)
 	for i := 0; i < nItems; i++ {
 		e := time.Now()
-		arr = append([]atone.Element{i}, arr...)
+		arr = append([]int{1}, arr...)
 		assert(arr[0] == i)
 		arrMedium += time.Now().UnixNano() - e.UnixNano()
 	}
@@ -254,7 +250,7 @@ func BenchmarkInsert(b *testing.B) {
 
 func TestReverse(t *testing.T) {
 	nItems := 26
-	arr := atone.New()
+	arr := atone.New[int]()
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
@@ -266,7 +262,7 @@ func TestReverse(t *testing.T) {
 
 func TestReserve(t *testing.T) {
 	nItems := 17
-	arr := atone.NewWithCapacity(20)
+	arr := atone.NewWithCapacity[int](20)
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
@@ -275,7 +271,7 @@ func TestReserve(t *testing.T) {
 
 func TestTruncate(t *testing.T) {
 	nItems := 17
-	arr := atone.NewWithCapacity(0)
+	arr := atone.NewWithCapacity[int](0)
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}
@@ -288,7 +284,7 @@ func TestTruncate(t *testing.T) {
 
 func TestSlice(t *testing.T) {
 	nItems := 17
-	arr := atone.NewWithCapacity(0)
+	arr := atone.NewWithCapacity[int](0)
 	for i := 0; i < nItems; i++ {
 		arr.Push(i)
 	}

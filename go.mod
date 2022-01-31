@@ -1,3 +1,3 @@
 module github.com/gabivlj/atone-go
 
-go 1.14
+go 1.18
