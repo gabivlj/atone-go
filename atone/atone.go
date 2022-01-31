@@ -147,11 +147,20 @@ func (v *Vec[T]) FindMultithreaded(el T, cb func(T) bool) int {
 	go func() {
 		channel <- find(v.newTail, el, cb)
 	}()
+
+	target := 0
 	for found := range channel {
+		target++
 		if found != -1 {
 			return found
 		}
+		if target >= 2 {
+			break
+		}
 	}
+
+	close(channel)
+
 	return -1
 }
 
@@ -231,13 +240,10 @@ func (v *Vec[T]) Reverse() {
 
 // Reserve the desired size inmemory to let space for nElements, it might reserve more memory than necessary for leaving space for more items for carry()
 func (v *Vec[T]) Reserve(nElements int) {
-
 	if v.oldLen() > 0 {
-
 		v.carryAll()
-		v.grow(nElements)
-		return
 	}
+
 	v.grow(nElements)
 }
 
